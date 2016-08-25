@@ -18,8 +18,8 @@ defineSuite([
         'Core/loadArrayBuffer',
         'Core/loadJson',
         'Core/Math',
-        'Core/Matrix4',
         'Core/Matrix3',
+        'Core/Matrix4',
         'Core/PrimitiveType',
         'Core/Transforms',
         'Renderer/RenderState',
@@ -49,8 +49,8 @@ defineSuite([
         loadArrayBuffer,
         loadJson,
         CesiumMath,
-        Matrix4,
         Matrix3,
+        Matrix4,
         PrimitiveType,
         Transforms,
         RenderState,
@@ -1862,7 +1862,15 @@ defineSuite([
                 getHeight : function() {
                     return 0.0;
                 },
-                _surface : {},
+                _surface : {
+                    tileProvider : {
+                        ready : true
+                    },
+                    _tileLoadQueue : {},
+                    _debug : {
+                        tilesWaitingForChildren : 0
+                    }
+                },
                 destroy : function() {}
             };
 

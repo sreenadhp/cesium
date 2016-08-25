@@ -17,6 +17,17 @@ define([
         pollToPromise) {
     'use strict';
 
+    var mockTile = {
+        contentBoundingVolume : new TileBoundingSphere(),
+        _header : {
+            content : {
+                boundingVolume : {
+                    sphere : [0.0, 0.0, 0.0, 1.0]
+                }
+            }
+        }
+    };
+
     function Cesium3DTilesTester() {
     }
 
@@ -82,11 +93,8 @@ define([
 
     Cesium3DTilesTester.loadTileExpectError = function(scene, arrayBuffer, type) {
         var tileset = {};
-        var tile = {
-            contentBoundingVolume : new TileBoundingSphere()
-        };
         var url = '';
-        var content = Cesium3DTileContentFactory[type](tileset, tile, url);
+        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url);
         expect(function() {
             content.initialize(arrayBuffer);
             content.update(tileset, scene.frameState);
@@ -100,11 +108,8 @@ define([
         var tileset = {
             baseUrl : counter++
         };
-        var tile = {
-            contentBoundingVolume : new TileBoundingSphere()
-        };
         var url = '';
-        var content = Cesium3DTileContentFactory[type](tileset, tile, url);
+        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url);
         content.initialize(arrayBuffer);
         content.update(tileset, scene.frameState);
 
@@ -119,11 +124,8 @@ define([
         var tileset = {
             loadTileset : Cesium3DTileset.prototype.loadTileset
         };
-        var tile = {
-            contentBoundingVolume : new TileBoundingSphere()
-        };
         var url = 'invalid';
-        var content = Cesium3DTileContentFactory[type](tileset, tile, url);
+        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url);
         content.request();
 
         return content.readyPromise.then(function(content) {
@@ -199,32 +201,46 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var magic = defaultValue(options.magic, [105, 51, 100, 109]);
         var version = defaultValue(options.version, 1);
-        var gltfFormat = defaultValue(options.gltfFormat, 1);
-        var featuresLength = defaultValue(options.featuresLength, 1);
 
-        var headerByteLength = 28;
-        var instancesByteLength = featuresLength * 16;
-        var byteLength = headerByteLength + instancesByteLength;
+        var gltfFormat = defaultValue(options.gltfFormat, 1);
+        var gltfUri = defaultValue(options.gltfUri, '');
+        var gltfUriByteLength = gltfUri.length;
+
+        var featuresLength = defaultValue(options.featuresLength, 1);
+        var featureTableJSON = {
+            INSTANCES_LENGTH : featuresLength,
+            POSITION : new Array(featuresLength * 3).fill(0)
+        };
+        var featureTableJSONString = JSON.stringify(featureTableJSON);
+        var featureTableJSONByteLength = featureTableJSONString.length;
+
+        var headerByteLength = 32;
+        var uriByteLength = gltfUri.length;
+        var byteLength = headerByteLength + featureTableJSONByteLength + uriByteLength;
         var buffer = new ArrayBuffer(byteLength);
         var view = new DataView(buffer);
         view.setUint8(0, magic[0]);
         view.setUint8(1, magic[1]);
         view.setUint8(2, magic[2]);
         view.setUint8(3, magic[3]);
-        view.setUint32(4, version, true);          // version
-        view.setUint32(8, byteLength, true);       // byteLength
-        view.setUint32(12, 0, true);               // batchTableByteLength
-        view.setUint32(16, 0, true);               // gltfByteLength
-        view.setUint32(20, gltfFormat, true);      // gltfFormat
-        view.setUint32(24, featuresLength, true); // featuresLength
+        view.setUint32(4, version, true);                        // version
+        view.setUint32(8, byteLength, true);                     // byteLength
+        view.setUint32(12, featureTableJSONByteLength, true);    // featureTableJSONByteLength
+        view.setUint32(16, 0, true);                             // featureTableBinaryByteLength
+        view.setUint32(20, 0, true);                             // batchTableJSONByteLength
+        view.setUint32(24, 0, true);                             // batchTableBinaryByteLength
+        view.setUint32(28, gltfFormat, true);                    // gltfFormat
 
+        var i;
         var byteOffset = headerByteLength;
-        for (var j = 0; j < featuresLength; ++j) {
-            view.setFloat64(byteOffset, 0.0, true);
-            view.setFloat64(byteOffset + 8, 0.0, true);
-            byteOffset += 16;
+        for (i = 0; i < featureTableJSONByteLength; i++) {
+            view.setUint8(byteOffset, featureTableJSONString.charCodeAt(i));
+            byteOffset++;
         }
-
+        for (i = 0; i < gltfUriByteLength; i++) {
+            view.setUint8(byteOffset, gltfUri.charCodeAt(i));
+            byteOffset++;
+        }
         return buffer;
     };
 
