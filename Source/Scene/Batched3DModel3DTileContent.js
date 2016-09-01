@@ -218,7 +218,7 @@ define([
             batchLength = batchTableJsonByteLength;
             batchTableJsonByteLength = batchTableBinaryByteLength;
             batchTableBinaryByteLength = 0;
-            console.log('Warning: b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
+//            console.log('Warning: b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
         }
 
         this._featuresLength = batchLength;

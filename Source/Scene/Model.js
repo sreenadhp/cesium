@@ -135,7 +135,8 @@ define([
         return {};
     }
 
-    var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO));
+    var yUpToZUp = Matrix4.clone(Matrix4.IDENTITY);
+//    var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO));
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
     var ModelState = {
